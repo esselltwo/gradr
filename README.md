@@ -13,8 +13,9 @@ Those sheets are in turn prepared from some sort of master grading sheet; in my 
 
 * The first column should contains names or some other identifying string.
   * The first row of the first column should be blank
-* The second column is optional: if the first row is the string "DROP", then the column is interpreted as giving the number of quiz or homework scores to drop. 
+* The second column lists how many quiz or homework scores to drop
   * This can vary between students because of excused absences.
+  * The first row of the second column should also be blank
 * The remaining columns give information on the assignments.
   * The first row gives the maximum number of points possible on the assignment for normalization purposes
   * The remaining rows give each students' points earned
