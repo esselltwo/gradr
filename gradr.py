@@ -5,6 +5,9 @@ import csv
 #Data is kept in a dictionary
 #keys are student names and the values are lists of scores
 
+GradeNames = ['F', 'D-', 'D', 'D+', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+']
+GradeNumbers = [0,2,3,4,5,6,7,8,9,10,11,12,13]
+
 def parseScores(scores):
     #Converts list of strings to floats, treating empty strings as 0.0
     output = []
