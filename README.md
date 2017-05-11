@@ -18,13 +18,14 @@ It shoudl be pretty clear if you look at the code.
 There are two types of input CSV files that gradr accepts:
 
 Names files are just a list of names and student IDs.
-*The first column contains the names
-*The second column contains the student IDs (which can be any string but are usually numbers)
+* The first column contains the names
+* The second column contains the student IDs (which can be any string but are usually numbers)
 
 Gradesheet files record a list of scores on individual assignments, along with the max points possible and the name of the assignment type.
 They are intended for *one* type of assignment: one file for quizzes, one for homework, etc.
-*The first row has a blank entry, the name of the assignment type, then numbers giving the maximum points for each assignment
-*Below the first row:
-  *The first column has student IDs
-  *The second column has the number of assignments to drop (this can vary between students because of excused absences, etc.)
-  *The remaining columns have individual assignment scores
+
+* The first row has a blank entry, the name of the assignment type, then numbers giving the maximum points for each assignment
+* Below the first row:
+  * The first column has student IDs
+  * The second column has the number of assignments to drop (this can vary between students because of excused absences, etc.)
+  * The remaining columns have individual assignment scores
