@@ -127,7 +127,7 @@ class Gradebook:
 
     def mathematicaList(self, cat):
         #Returns a list of scores to analyze externally
-        #Formatted as a string that Mathematical will interpret as a list
+        #Formatted as a string that Mathematica will interpret as a list
         output = '{'
         for id in self.table: output = output + str(self.table[id][cat]) + ', '
         return output[:-2] + '}' #there's an extra terminal ', ' that we drop
