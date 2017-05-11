@@ -34,6 +34,9 @@ class Gradebook:
         #names is a dict with keys student IDs and values student names
         self.names = {}
 
+        # #grades is a dict with keys student IDs and values final letter grades
+        # self.grades = {}
+
     def importNames(self, filename):
         #Takes a CSV file with names and student IDs and initializes
         #the table and name dicts with appropriate data
@@ -42,9 +45,10 @@ class Gradebook:
         #filename should be a CSV with the first column names and the second IDs
         #other columns will be ignored
             nameReader = csv.reader(file)
+            firstRow = True
             for row in nameReader:
-                table[row[1]] = {}
-                names[row[1]] = row[0]
+                self.table[row[1]] = {}
+                self.names[row[1]] = row[0]
 
     def importScaledScore(self, filename):
         #This method computes scaled scores (including drops)
@@ -53,7 +57,7 @@ class Gradebook:
 
         #filename is a CSV file with individual assignment scores
         #first column is student ids (with first row blank)
-        #second column is number of assignments to drop (with first row blank)
+        #second column is number of assignments to drop (with first row category name)
         #remaining columns are assignments (with first row max points)
 
         with open(filename) as file:
@@ -63,6 +67,7 @@ class Gradebook:
             for row in scoreReader :
                 if firstRow: #Extract the first row to get the max possible points
                     category = row[1] #second column has category name
+                    self.gradeCategories.append(category)
                     maxScores = parseScores(row[2:]) #first two columns are blank
                     firstRow = False
                 else:
@@ -74,89 +79,55 @@ class Gradebook:
                     toDrop = int(row[1])
                     scaledScores = scaledScores[toDrop:] #drop lowest toDrop scores
                     average = sum(scaledScores)/float(len(scaledScores))
-                    self.gradeCategories.append(category)
                     self.table[row[0]][category] = average
 
+    def foldCategories(self, toFold, weights, newCat, delOld = False):
+        #Folds list toFold of grade categories together
+        #Folds according to weight vector weights
+        #New category has name newCat
+        #If delOld = True, delete old category names
 
+        for id in self.table:
+            total = 0
+            for cat, wt in zip(toFold, weights):
+                total = total + self.table[id][cat]*wt
+                if delOld: del self.table[id][cat]
+            self.table[id][newCat] = total
 
-def initGradeDict(filename):
-    #Initializes the dictionary of grades with names
-    with open(filename, newline='') as f:
-        nameReader = csv.reader(f)
-        grades = {}
+    def applyCuttoffs(self, sourceCat, targetCat, cutoffs, labels):
+        #Uses the numerical cutoffs to assign labels
+        #Numerical cutoffs are checked against sourceCat
+        #Labels are applied to targetCat
 
-        firstRow = True
-        for row in nameReader:
-            if firstRow: #first row doesn't have names
-                firstRow = False
-            else:
-                grades[row[0]] = []
+        for id in self.table:
+            for bound, label in zip(cutoffs, labels):
+                if self.table[id][sourceCat] > bound: self.table[id][targetCat] = label
 
-        return grades
+    def exportGradeReport(self, cats, filename):
+        #Writes a grade report spreadsheet to filename
+        #Names, ids, and the categories in cats are included
 
-def calcSubScore(grades, filename):
-    #Given a csv with one type of assignment (quiz, HW, etc.)
-    #this finds a scaled score (out of 1) and appends to the dict entry
-    with open(filename, newline='') as gradefile:
-        gradeReader = csv.reader(gradefile)
+        with open(filename, 'w') as file:
+            outwriter = csv.writer(file, lineterminator = '\n')
+            outwriter.writerow(['Name', 'ID'] + cats) #print header
+            for id in self.table:
+                row = [self.names[id], id]
+                for c in cats: row.append(str(self.table[id][c]))
+                outwriter.writerow(row)
 
-        firstRow = True
-        for row in gradeReader:
-            if firstRow: #Extract the first row to get the max possible points
-                maxScores = parseScores(row[2:]) #first two columns are blank
-                firstRow = False
-            else:
-                scores = parseScores(row[2:])
-                scaledScores = []
-                for maxScore, score in zip(maxScores,scores):
-                    scaledScores.append(score/maxScore)
-                scaledScores.sort()
-                toDrop = int(row[1])
-                scaledScores = scaledScores[toDrop:] #drop lowest toDrop scores
-                grades[row[0]].append(sum(scaledScores)/float(len(scaledScores)))
-    return(grades)
+    def exportCalCentral(self, cat, filename):
+        #Writes a spreadsheet for uploading to CalCentral
+        #The format is Student ID number in column A and letter grade in column C
+        #cat is the label of the grade categoy containing final letter grades
 
-def calcScore(grades, weights):
-    #Takes weighted sum of each student's subscores and appends
-    for id in grades:
-        total = 0
-        for score, weight in zip(grades[id],weights):
-            total = total + score * weight
-        grades[id].append(total)
+        with open(filename, 'w') as file:
+            outwriter = csv.writer(file, lineterminator = '\n')
+            for id in self.table:
+                outwriter.writerow([id, '', self.table[id][cat]])
 
-    return grades
-
-def extractList(grades):
-    #Extracts a list of grades to look at in Mathematica
-    #Format for Mathematica lists is {x1, x2, ...}
-    output = '{'
-    for id in grades:
-        output = output + str(grades[id][-1]) + ', '
-    return output[:-2] + '}' #there's an extra terminal ', ' that we drop
-
-def assignGrade(score, cutoffs, type):
-    #Given numerical cutoffs, assigns a grade to a given score
-
-    #type is either 'names' or 'numbers'
-    if type == 'letter':
-        labels = GradeNames
-    elif type == 'number':
-        labels = GradeNumbers
-
-    #Cutoffs are a list:
-    #Everyone with a score above cutoffs[0] gets at least an F,
-    #everyone with a score above cutoffs[1] gets at least a D-, etc.
-    for bound, label in zip(cutoffs,labels):
-        if score > bound: grade = label
-
-    return grade
-
-def exportGrades(grades, cutoffs, filename):
-    #Takes a dict of grades and prints a formatted CSV to filename
-    with open(filename, 'w') as f:
-        outwriter = csv.writer(f, lineterminator = '\n')
-        for student in grades:
-            letter = assignGrade(grades[student][-1], cutoffs,'letter')
-            number = str(assignGrade(grades[student][-1], cutoffs, 'number'))
-            row = [student] + [str(n) for n in grades[student]] + [letter] + [number]
-            outwriter.writerow(row)
+    def mathematicaList(self, cat):
+        #Returns a list of scores to analyze externally
+        #Formatted as a string that Mathematical will interpret as a list
+        output = '{'
+        for id in self.table: output = output + str(self.table[id][cat]) + ', '
+        return output[:-2] + '}' #there's an extra terminal ', ' that we drop
