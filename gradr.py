@@ -17,6 +17,30 @@ def parseScores(scores):
             output.append(float(a))
     return output
 
+def processGradescope(infileName, outfileName, examName, idList):
+    #Takes a Gradescope CSV infile and extracts the scores on examName
+    #for just the students in idList.
+    #Writes to outfile in the standard gradr assignment sheet format
+    #This method assumes max points are the same for every student
+
+    with open(infileName) as infile, open(outfileName,'w') as outfile:
+        reader = csv.reader(infile)
+        writer = csv.writer(outfile, lineterminator = '\n')
+
+        #generate header
+        firstRow = reader.__next__()
+        scoreIndex = firstRow.index(examName)
+        maxScoreIndex = scoreIndex + 1
+        idIndex = 1
+        maxScore = reader.__next__()[maxScoreIndex]
+        writer.writerow(['', examName, maxScore])
+        infile.seek(1) #go back to second row
+
+        #extract grades
+        for row in reader:
+            for id in idList:
+                if id == row[idIndex]: writer.writerow([id,row[scoreIndex]])
+
 class Gradebook:
     #Tracks grading rules, students, and scores
 

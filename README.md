@@ -28,3 +28,5 @@ They are intended for *one* type of assignment: one file for quizzes, one for ho
   *The first column has student IDs
   *The second column has the number of assignments to drop (this can vary between students because of excused absences, etc.)
   *The remaining columns have individual assignment scores
+
+Finally, the processGradescope method can be used to turn a Gradescope output CSV into a gradesheet file.
