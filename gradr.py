@@ -74,10 +74,13 @@ class Gradebook:
                 self.table[row[1]] = {}
                 self.names[row[1]] = row[0]
 
-    def importScaledScore(self, filename):
-        #This method computes scaled scores (including drops)
+    def importScores(self, filename, scaleQ = True):
+        #This method computes scores (including drops and possibly scaling)
         #for each student and adds them to the gradebook
         #Intended for things like dropping lowest N quizzes and averaging remainder
+        #If scaleQ is True, scores are normalized out of 1 and max scores are used
+        #If scaleQ is False, this just extracts the scores and sums them
+
 
         #filename is a CSV file with individual assignment scores
         #first column is student ids (with first row blank)
@@ -87,14 +90,14 @@ class Gradebook:
         with open(filename) as file:
             scoreReader = csv.reader(file)
 
-            firstRow = True
-            for row in scoreReader :
-                if firstRow: #Extract the first row to get the max possible points
-                    category = row[1] #second column has category name
-                    self.gradeCategories.append(category)
-                    maxScores = parseScores(row[2:]) #first two columns are blank
-                    firstRow = False
-                else:
+            #extract header
+            firstRow = scoreReader.__next__()
+            category = firstRow[1] #second column has category name
+            self.gradeCategories.append(category)
+            maxScores = parseScores(firstRow[2:]) #first two columns are blank
+
+            if scaleQ:
+                for row in scoreReader:
                     scores = parseScores(row[2:])
                     scaledScores = []
                     for maxScore, score in zip(maxScores,scores):
@@ -104,6 +107,10 @@ class Gradebook:
                     scaledScores = scaledScores[toDrop:] #drop lowest toDrop scores
                     average = sum(scaledScores)/float(len(scaledScores))
                     self.table[row[0]][category] = average
+            else:
+                for row in scoreReader:
+                    scores = parseScores(row[2:])
+                    self.table[row[0]][category] = sum(scores)
 
     def foldCategories(self, toFold, weights, newCat, delOld = False):
         #Folds list toFold of grade categories together
