@@ -39,7 +39,7 @@ def processGradescope(infileName, outfileName, examName, idList):
         #extract grades
         for row in reader:
             for id in idList:
-                if id == row[idIndex]: writer.writerow([id,row[scoreIndex]])
+                if id == row[idIndex]: writer.writerow([id,0,row[scoreIndex]])
 
 class Gradebook:
     #Tracks grading rules, students, and scores
