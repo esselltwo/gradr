@@ -4,8 +4,8 @@ import csv
 
 #Constants
 #Names and numerical values of the grades that can be assigned
-GradeNames = ['F', 'D-', 'D', 'D+', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+']
-GradeNumbers = [0,2,3,4,5,6,7,8,9,10,11,12,13]
+GradeNames = ['F', 'D', 'D+', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+']
+GradeNumbers = [0,3,4,5,6,7,8,9,10,11,12,13]
 
 def parseScores(scores):
     #Converts list of strings to floats, treating empty strings as 0.0
