@@ -129,10 +129,12 @@ class Gradebook:
         #Uses the numerical cutoffs to assign labels
         #Numerical cutoffs are checked against sourceCat
         #Labels are applied to targetCat
+        #If sourceCat and targetCat are the same, this replaces the values
 
         for id in self.table:
             for bound, label in zip(cutoffs, labels):
-                if self.table[id][sourceCat] > bound: self.table[id][targetCat] = label
+                if self.table[id][sourceCat] > bound: newValue = label
+            self.table[id][targetCat] = newValue
 
     def exportGradeReport(self, cats, filename):
         #Writes a grade report spreadsheet to filename
