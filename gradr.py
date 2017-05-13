@@ -171,6 +171,8 @@ class Gradebook:
         #Labels are applied to targetCat
         #If sourceCat and targetCat are the same, this replaces the values
 
+        #!!!!!!If they aren't, doesn't update categoryNames properly!!!!
+
         for id in self.table:
             for bound, label in zip(cutoffs, labels):
                 if self.table[id][sourceCat] > bound: newValue = label
