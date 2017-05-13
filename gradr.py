@@ -150,7 +150,7 @@ class Gradebook:
                 toDrop = int(row[1])
                 scaledScores = scaleAndDrop(scores, maxScores, toDrop)
                 average = sum(scaledScores)/float(len(scaledScores))
-                self.table[row[0]][category] = average
+                self.table[row[0]][category] = Score(average)
 
     def foldCategories(self, toFold, weights, newCat, delOld = False):
         #Folds list toFold of grade categories together
@@ -161,9 +161,9 @@ class Gradebook:
         for id in self.table:
             total = 0
             for cat, wt in zip(toFold, weights):
-                total = total + self.table[id][cat]*wt
+                total = total + self.table[id][cat].getValue()*wt
                 if delOld: del self.table[id][cat]
-            self.table[id][newCat] = total
+            self.table[id][newCat] = Score(total)
 
     def applyCuttoffs(self, sourceCat, targetCat, cutoffs, labels):
         #Uses the numerical cutoffs to assign labels
@@ -175,7 +175,8 @@ class Gradebook:
 
         for id in self.table:
             for bound, label in zip(cutoffs, labels):
-                if self.table[id][sourceCat] > bound: newValue = label
+                if not self.table[id][sourceCat].missingQ():
+                    if self.table[id][sourceCat].getValue() > bound: newValue = label
             self.table[id][targetCat] = newValue
 
     def exportGradeReport(self, cats, filename):
@@ -187,7 +188,12 @@ class Gradebook:
             outwriter.writerow(['Name', 'ID'] + cats) #print header
             for id in self.table:
                 row = [self.names[id], id]
-                for c in cats: row.append(str(self.table[id][c]))
+                for c in cats:
+                    x = self.table[id][c]
+                    if type(x) == type(''):
+                        row.append(x)
+                    elif type(x) == type(Score('')):
+                        row.append(str(x.score))
                 outwriter.writerow(row)
 
     def exportCalCentral(self, cat, filename):
