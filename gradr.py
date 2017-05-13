@@ -7,39 +7,67 @@ import csv
 GradeNames = ['F', 'D', 'D+', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+']
 GradeNumbers = [0,3,4,5,6,7,8,9,10,11,12,13]
 
-def parseScores(scores):
-    #Converts list of strings to floats, treating empty strings as 0.0
-    output = []
-    for a in scores:
-        if a == '':
-            output.append(float(0))
-        else:
-            output.append(float(a))
-    return output
-
-def processGradescope(infileName, outfileName, examName, idList):
-    #Takes a Gradescope CSV infile and extracts the scores on examName
+def processGradescope(infileName, outfileName, idList):
+    #Takes a Gradescope CSV infile and extracts the exam scores
     #for just the students in idList.
-    #Writes to outfile in the standard gradr assignment sheet format
-    #This method assumes max points are the same for every student
+    #Writes to outfile in the format used for importScores
 
     with open(infileName) as infile, open(outfileName,'w') as outfile:
         reader = csv.reader(infile)
         writer = csv.writer(outfile, lineterminator = '\n')
 
-        #generate header
+        #find assignment names
         firstRow = reader.__next__()
-        scoreIndex = firstRow.index(examName)
-        maxScoreIndex = scoreIndex + 1
-        idIndex = 1
-        maxScore = reader.__next__()[maxScoreIndex]
-        writer.writerow(['', examName, maxScore])
-        infile.seek(1) #go back to second row
+        #Gradescope uses format
+        #name, SID, email, exam 1 score, max exam 1 score, exam 2 score, max exam 2 score, ...
+        numExams = int((len(firstRow) -3)/2)
+        examColumns = [3 + 2*k for k in range(numExams)]
+        examNames = [firstRow[i] for i in examColumns]
+
+        #print header
+        writer.writerow(['']+ examNames)
 
         #extract grades
+        idIndex = 1 #we assume we're using SID numbers, which are in column 2
         for row in reader:
             for id in idList:
-                if id == row[idIndex]: writer.writerow([id,0,row[scoreIndex]])
+                if id == row[idIndex]:
+                    writer.writerow([id] + [row[i] for i in examColumns])
+
+class Score:
+    #An object for containing numerical scores on assignments
+    #Basically just a float, but can also take value ''
+    #if missing assigments need to be treated differently than zero
+
+    def __init__(self, score):
+        if score == '':
+            self.score = ''
+        else:
+            self.score = float(score)
+
+    #Returns True if the assignment score is missing
+    def missingQ(self):
+        if self.score == '':
+            return True
+        else:
+            return False
+
+    #Yields the numerical value of a score treating missing as zero
+    def getValue(self):
+        if self.missingQ():
+            return 0.0
+        else:
+            return self.score
+
+def scaleAndDrop(scores, maxScores, toDrop):
+    #Takes a list of Score objects scores,
+    #a list maxScores of maximum scores as floats,
+    #and an integer number of assignments to drop
+    #and returns the list of scaled scores
+
+    output = [score.getValue()/maxScore for score, maxScore in zip(scores, maxScores)]
+    output.sort()
+    return output[toDrop:]
 
 class Gradebook:
     #Tracks grading rules, students, and scores
@@ -51,7 +79,7 @@ class Gradebook:
         #these will be used as dict keys, so they need to be unique
         self.gradeCategories = []
 
-        #table is a dict with keys student IDs and values dicts of scores
+        #table is a dict with keys student IDs and values dicts of Scores
         #the lists of grades should correspond to categories
         self.table = {}
 
@@ -69,18 +97,38 @@ class Gradebook:
         #filename should be a CSV with the first column names and the second IDs
         #other columns will be ignored
             nameReader = csv.reader(file)
-            firstRow = True
             for row in nameReader:
                 self.table[row[1]] = {}
                 self.names[row[1]] = row[0]
 
-    def importScores(self, filename, scaleQ = True):
+    def importScores(self, filename):
+        #This method imports scores from a file
+        #These scores are not scaled or processed
+        #Typical use is a CSV with all the exam scores
+
+        #filename is a CSV file with assignment names and scores
+        #first column is student IDs with first row blank
+        #remaining columns have header the assignment name
+        #and rows each student's score
+
+        with open(filename) as file:
+            scoreReader = csv.reader(file)
+
+            #extract header
+            firstRow = scoreReader.__next__()
+            cats = firstRow[1:]
+            self.gradeCategories = self.gradeCategories + cats
+
+            for row in scoreReader:
+                scores = [Score(x) for x in row[1:]]
+                for score, cat in zip(scores, cats):
+                    self.table[row[0]][cat] = score
+
+
+    def importScaledScores(self, filename):
         #This method computes scores (including drops and possibly scaling)
         #for each student and adds them to the gradebook
         #Intended for things like dropping lowest N quizzes and averaging remainder
-        #If scaleQ is True, scores are normalized out of 1 and max scores are used
-        #If scaleQ is False, this just extracts the scores and sums them
-
 
         #filename is a CSV file with individual assignment scores
         #first column is student ids (with first row blank)
@@ -94,23 +142,15 @@ class Gradebook:
             firstRow = scoreReader.__next__()
             category = firstRow[1] #second column has category name
             self.gradeCategories.append(category)
-            maxScores = parseScores(firstRow[2:]) #first two columns are blank
+            maxScores = [float(x) for x in firstRow[2:]] #first two columns are blank
+            #These are not Score objects because they should never be blank
 
-            if scaleQ:
-                for row in scoreReader:
-                    scores = parseScores(row[2:])
-                    scaledScores = []
-                    for maxScore, score in zip(maxScores,scores):
-                        scaledScores.append(score/maxScore)
-                    scaledScores.sort()
-                    toDrop = int(row[1])
-                    scaledScores = scaledScores[toDrop:] #drop lowest toDrop scores
-                    average = sum(scaledScores)/float(len(scaledScores))
-                    self.table[row[0]][category] = average
-            else:
-                for row in scoreReader:
-                    scores = parseScores(row[2:])
-                    self.table[row[0]][category] = sum(scores)
+            for row in scoreReader:
+                scores = [Score(x) for x in row[2:]]
+                toDrop = int(row[1])
+                scaledScores = scaleAndDrop(scores, maxScores, toDrop)
+                average = sum(scaledScores)/float(len(scaledScores))
+                self.table[row[0]][category] = average
 
     def foldCategories(self, toFold, weights, newCat, delOld = False):
         #Folds list toFold of grade categories together
