@@ -3,9 +3,11 @@
 import csv
 
 #Constants
-#Names and numerical values of the grades that can be assigned
-GradeNames = ['F', 'D', 'D+', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+']
-GradeNumbers = [0,3,4,5,6,7,8,9,10,11,12,13]
+#Grades are internally represented as integers:
+#0  2   3   4   5   6   7   8   9   10  11  12  13
+#F  D-  D   D+  C-  C   C+  B-  B   B+  A-  A   A+
+Grades = [0,2,3,4,5,6,7,8,9,10,11,12,13]
+LetterGrades = {0 : 'F', 2 : 'D-',3 : 'D',4:  'D+',5: 'C-',6: 'C',7: 'C+',8: 'B-',9: 'B',10: 'B+',11: 'A-',12: 'A',13: 'A+'}
 
 def processGradescope(infileName, outfileName, idList):
     #Takes a Gradescope CSV infile and extracts the exam scores
@@ -171,29 +173,45 @@ class Gradebook:
         #Labels are applied to targetCat
         #If sourceCat and targetCat are the same, this replaces the values
 
-        #!!!!!!If they aren't, doesn't update categoryNames properly!!!!
-
         for id in self.table:
-            for bound, label in zip(cutoffs, labels):
-                if not self.table[id][sourceCat].missingQ():
+            if self.table[id][sourceCat].missingQ():
+                newValue = Score('')
+            else:
+                for bound, label in zip(cutoffs, labels):
                     if self.table[id][sourceCat].getValue() > bound: newValue = label
             self.table[id][targetCat] = newValue
+            del newValue #this should not continue between loops
 
-    def exportGradeReport(self, cats, filename):
+    def exportGradeReport(self, cats, filename, letterCats = []):
         #Writes a grade report spreadsheet to filename
         #Names, ids, and the categories in cats are included
+        #Categories in letterCats are treated as letter grades
+        #and printed as letters, not numbers
 
         with open(filename, 'w') as file:
             outwriter = csv.writer(file, lineterminator = '\n')
-            outwriter.writerow(['Name', 'ID'] + cats) #print header
+
+            #generate and print header
+            catHeader = []
+            for c in cats:
+                catHeader.append(c)
+                if c in letterCats: catHeader.append('')
+            outwriter.writerow(['Name', 'ID'] + catHeader)
+
             for id in self.table:
                 row = [self.names[id], id]
                 for c in cats:
                     x = self.table[id][c]
-                    if type(x) == type(''):
-                        row.append(x)
+                    if type(x) == type(0): #if it's a letter grade
+                        if c in letterCats:
+                            row.append(LetterGrades[x])
+                        else:
+                            row.append(str(x))
                     elif type(x) == type(Score('')):
-                        row.append(str(x.score))
+                        if x.missingQ():
+                            row.append('')
+                        else:
+                            row.append(str(x.score))
                 outwriter.writerow(row)
 
     def exportCalCentral(self, cat, filename):
