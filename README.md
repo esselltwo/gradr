@@ -15,11 +15,11 @@ It shoudl be pretty clear if you look at the code.
 
 ## Formatting
 
-There are two types of input CSV files that gradr accepts:
+There are three types of input CSV files that gradr accepts:
 
 Names files are just a list of names and student IDs.
-*The first column contains the names
-*The second column contains the student IDs (which can be any string but are usually numbers)
+* The first column contains the names
+* The second column contains the student IDs (which can be any string but are usually numbers)
 
 Gradesheet files record a list of scores on individual assignments, along with the max points possible and the name of the assignment type.
 They are intended for *one* type of assignment: one file for quizzes, one for homework, etc.
@@ -30,3 +30,4 @@ They are intended for *one* type of assignment: one file for quizzes, one for ho
   *The remaining columns have individual assignment scores
 
 Finally, the processGradescope method can be used to turn a Gradescope output CSV into a gradesheet file.
+The formatting of these is slightly different and is documented in gradr.py (or here once I write it.)
