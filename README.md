@@ -10,7 +10,7 @@ Leaving off the "e" is trendy so I have complied.
 ## Documentation
 gradr.py defines a "Gradebook" object that stores student names and ids and a dictionary of scores/grades.
 It has a bunch of methods for importing names and scores, combining scores together, and exporting reports.
-It shoudl be pretty clear if you look at the code.
+It should be pretty clear if you look at the code.
 
 
 ## Formatting
@@ -21,13 +21,19 @@ Names files are just a list of names and student IDs.
 * The first column contains the names
 * The second column contains the student IDs (which can be any string but are usually numbers)
 
-Gradesheet files record a list of scores on individual assignments, along with the max points possible and the name of the assignment type.
+Assignment gradesheet files record a list of scores on individual assignments, along with the max points possible and the name of the assignment type.
 They are intended for *one* type of assignment: one file for quizzes, one for homework, etc.
 *The first row has a blank entry, the name of the assignment type, then numbers giving the maximum points for each assignment
+  *Assignment types/names need to be unique! They will be used as dict keys
 *Below the first row:
   *The first column has student IDs
   *The second column has the number of assignments to drop (this can vary between students because of excused absences, etc.)
   *The remaining columns have individual assignment scores
 
-Finally, the processGradescope method can be used to turn a Gradescope output CSV into a gradesheet file.
-The formatting of these is slightly different and is documented in gradr.py (or here once I write it.)
+Exam gradesheet files record exam scores
+They are intended to hold *all* the exam scores at once, and they are what processGradescope produces
+*The first row has a blank entry and then a list of exam names
+  *Assignment types/names need to be unique! They will be used as dict keys
+*Below the first row:
+  *The first column has studen IDs
+  *The remaining columns have the exam score
