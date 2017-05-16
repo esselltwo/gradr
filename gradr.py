@@ -61,6 +61,33 @@ class Score:
         else:
             return self.score
 
+class Grade:
+    #An object for containing letter grades
+    #It should be an element of the list Grades
+    #However, it can also be blank
+
+    def __init__(self, grade):
+        self.grade = grade
+
+    #Returns True if the grade is missing
+    def is_missing(self):
+        if self.grade == '':
+            return True
+
+    #Yields the numerical value of a grade treating missing as zero
+    def getValue(self):
+        if self.is_missing():
+            return 0
+        else:
+            return self.grade
+
+    #Returns the string describing the grade
+    def getLetter(self):
+        if self.is_missing():
+            return ''
+        else:
+            return LetterGrades[self.grade]
+
 def scaleAndDrop(scores, maxScores, toDrop):
     #Takes a list of Score objects scores,
     #a list maxScores of maximum scores as floats,
@@ -75,21 +102,38 @@ class Gradebook:
     #Tracks grading rules, students, and scores
 
     def __init__(self):
-        #gradeCategories should be a list of category names
-        #ex ['Homework', 'Quiz', 'Total Section']
-        #or ['Section', 'Midterm', 'Final', 'Total']
-        #these will be used as dict keys, so they need to be unique
-        self.gradeCategories = []
+        # #gradeCategories should be a list of category names
+        # #ex ['Homework', 'Quiz', 'Total Section']
+        # #or ['Section', 'Midterm', 'Final', 'Total']
+        # #these will be used as dict keys, so they need to be unique
+        # self.gradeCategories = []
 
         #table is a dict with keys student IDs and values dicts of Scores
-        #the lists of grades should correspond to categories
         self.table = {}
+
+        #gradeTable is a dict with keys student IDs and values dicts of Grades
+        self.gradeTable = {}
+
+        #List of categories that have been assigned letter grades
+        self.gradedCategories = []
 
         #names is a dict with keys student IDs and values student names
         self.names = {}
 
         # #grades is a dict with keys student IDs and values final letter grades
         # self.grades = {}
+
+    def is_graded(self, category):
+        return category in self.gradedCategories
+        # #Returns true if the category category has been assigned a letter grade
+        # #for ALL students
+        # studentIDs = self.table.keys()
+        # result = True
+        # for id in studentIDs:
+        #     if category not in list(self.gradeTable[id].keys()): result = False
+        #
+        # return result
+
 
     def importNames(self, filename):
         #Takes a CSV file with names and student IDs and initializes
@@ -101,6 +145,7 @@ class Gradebook:
             nameReader = csv.reader(file)
             for row in nameReader:
                 self.table[row[1]] = {}
+                self.gradeTable[row[1]] = {}
                 self.names[row[1]] = row[0]
 
     def importScores(self, filename):
@@ -119,7 +164,7 @@ class Gradebook:
             #extract header
             firstRow = scoreReader.__next__()
             cats = firstRow[1:]
-            self.gradeCategories = self.gradeCategories + cats
+            # self.gradeCategories = self.gradeCategories + cats
 
             for row in scoreReader:
                 scores = [Score(x) for x in row[1:]]
@@ -143,7 +188,7 @@ class Gradebook:
             #extract header
             firstRow = scoreReader.__next__()
             category = firstRow[1] #second column has category name
-            self.gradeCategories.append(category)
+            # self.gradeCategories.append(category)
             maxScores = [float(x) for x in firstRow[2:]] #first two columns are blank
             #These are not Score objects because they should never be blank
 
@@ -167,26 +212,25 @@ class Gradebook:
                 if delOld: del self.table[id][cat]
             self.table[id][newCat] = Score(total)
 
-    def applyCuttoffs(self, sourceCat, targetCat, cutoffs, labels):
-        #Uses the numerical cutoffs to assign labels
+    def assignGrades(self, category, cutoffs):
+        #Uses the numerical cutoffs to assign grades to scores
         #Numerical cutoffs are checked against sourceCat
-        #Labels are applied to targetCat
-        #If sourceCat and targetCat are the same, this replaces the values
+        #the grades go in gradeTable
 
         for id in self.table:
-            if self.table[id][sourceCat].missingQ():
-                newValue = Score('')
+            if self.table[id][category].missingQ():
+                self.gradeTable[id][category] = Grade('')
             else:
-                for bound, label in zip(cutoffs, labels):
-                    if self.table[id][sourceCat].getValue() > bound: newValue = label
-            self.table[id][targetCat] = newValue
-            del newValue #this should not continue between loops
+                for bound, grade in zip(cutoffs, Grades):
+                    if self.table[id][category].getValue() > bound:
+                        self.gradeTable[id][category] = Grade(grade)
 
-    def exportGradeReport(self, cats, filename, letterCats = []):
+        self.gradedCategories.append(category)
+
+    def exportGradeReport(self, cats, filename):
         #Writes a grade report spreadsheet to filename
         #Names, ids, and the categories in cats are included
-        #Categories in letterCats are treated as letter grades
-        #and printed as letters, not numbers
+        #If a category has a letter grade, prints it in an adjacent column
 
         with open(filename, 'w') as file:
             outwriter = csv.writer(file, lineterminator = '\n')
@@ -195,38 +239,40 @@ class Gradebook:
             catHeader = []
             for c in cats:
                 catHeader.append(c)
-                if c in letterCats: catHeader.append('')
+                if self.is_graded(c):
+                    catHeader.append(c + ' Grade')
             outwriter.writerow(['Name', 'ID'] + catHeader)
 
             for id in self.table:
                 row = [self.names[id], id]
                 for c in cats:
                     x = self.table[id][c]
-                    if type(x) == type(0): #if it's a letter grade
-                        if c in letterCats:
-                            row.append(LetterGrades[x])
-                        else:
-                            row.append(str(x))
-                    elif type(x) == type(Score('')):
-                        if x.missingQ():
+                    if x.missingQ():
+                        row.append('')
+                    else:
+                        row.append(str(x.getValue()))
+                    if self.is_graded(c):
+                        if self.gradeTable[id][c].is_missing():
                             row.append('')
                         else:
-                            row.append(str(x.score))
+                            row.append(self.gradeTable[id][c].getLetter())
                 outwriter.writerow(row)
 
-    def exportCalCentral(self, cat, filename):
-        #Writes a spreadsheet for uploading to CalCentral
-        #The format is Student ID number in column A and letter grade in column C
-        #cat is the label of the grade categoy containing final letter grades
 
-        with open(filename, 'w') as file:
-            outwriter = csv.writer(file, lineterminator = '\n')
-            for id in self.table:
-                outwriter.writerow([id, '', self.table[id][cat]])
-
-    def mathematicaList(self, cat):
-        #Returns a list of scores to analyze externally
-        #Formatted as a string that Mathematica will interpret as a list
-        output = '{'
-        for id in self.table: output = output + str(self.table[id][cat]) + ', '
-        return output[:-2] + '}' #there's an extra terminal ', ' that we drop
+    #These are broken! Fixing later
+    # def exportCalCentral(self, cat, filename):
+    #     #Writes a spreadsheet for uploading to CalCentral
+    #     #The format is Student ID number in column A and letter grade in column C
+    #     #cat is the label of the grade categoy containing final letter grades
+    #
+    #     with open(filename, 'w') as file:
+    #         outwriter = csv.writer(file, lineterminator = '\n')
+    #         for id in self.table:
+    #             outwriter.writerow([id, '', self.table[id][cat]])
+    #
+    # def mathematicaList(self, cat):
+    #     #Returns a list of scores to analyze externally
+    #     #Formatted as a string that Mathematica will interpret as a list
+    #     output = '{'
+    #     for id in self.table: output = output + str(self.table[id][cat]) + ', '
+    #     return output[:-2] + '}' #there's an extra terminal ', ' that we drop
