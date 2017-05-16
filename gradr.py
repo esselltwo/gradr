@@ -48,7 +48,7 @@ class Score:
             self.score = float(score)
 
     #Returns True if the assignment score is missing
-    def missingQ(self):
+    def is_missing(self):
         if self.score == '':
             return True
         else:
@@ -56,7 +56,7 @@ class Score:
 
     #Yields the numerical value of a score treating missing as zero
     def getValue(self):
-        if self.missingQ():
+        if self.is_missing():
             return 0.0
         else:
             return self.score
@@ -218,7 +218,7 @@ class Gradebook:
         #the grades go in gradeTable
 
         for id in self.table:
-            if self.table[id][category].missingQ():
+            if self.table[id][category].is_missing():
                 self.gradeTable[id][category] = Grade('')
             else:
                 for bound, grade in zip(cutoffs, Grades):
@@ -247,7 +247,7 @@ class Gradebook:
                 row = [self.names[id], id]
                 for c in cats:
                     x = self.table[id][c]
-                    if x.missingQ():
+                    if x.is_missing():
                         row.append('')
                     else:
                         row.append(str(x.getValue()))
