@@ -23,17 +23,17 @@ Names files are just a list of names and student IDs.
 
 Assignment gradesheet files record a list of scores on individual assignments, along with the max points possible and the name of the assignment type.
 They are intended for *one* type of assignment: one file for quizzes, one for homework, etc.
-*The first row has a blank entry, the name of the assignment type, then numbers giving the maximum points for each assignment
-  *Assignment types/names need to be unique! They will be used as dict keys
-*Below the first row:
-  *The first column has student IDs
-  *The second column has the number of assignments to drop (this can vary between students because of excused absences, etc.)
-  *The remaining columns have individual assignment scores
+* The first row has a blank entry, the name of the assignment type, then numbers giving the maximum points for each assignment
+  * Assignment types/names need to be unique! They will be used as dict keys
+* Below the first row:
+  * The first column has student IDs
+  * The second column has the number of assignments to drop (this can vary between students because of excused absences, etc.)
+  * The remaining columns have individual assignment scores
 
 Exam gradesheet files record exam scores
 They are intended to hold *all* the exam scores at once, and they are what processGradescope produces
-*The first row has a blank entry and then a list of exam names
-  *Assignment types/names need to be unique! They will be used as dict keys
-*Below the first row:
-  *The first column has studen IDs
-  *The remaining columns have the exam score
+* The first row has a blank entry and then a list of exam names
+  * Assignment types/names need to be unique! They will be used as dict keys
+* Below the first row:
+  * The first column has studen IDs
+  * The remaining columns have the exam score
