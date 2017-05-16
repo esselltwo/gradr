@@ -259,20 +259,19 @@ class Gradebook:
                 outwriter.writerow(row)
 
 
-    #These are broken! Fixing later
-    # def exportCalCentral(self, cat, filename):
-    #     #Writes a spreadsheet for uploading to CalCentral
-    #     #The format is Student ID number in column A and letter grade in column C
-    #     #cat is the label of the grade categoy containing final letter grades
-    #
-    #     with open(filename, 'w') as file:
-    #         outwriter = csv.writer(file, lineterminator = '\n')
-    #         for id in self.table:
-    #             outwriter.writerow([id, '', self.table[id][cat]])
-    #
-    # def mathematicaList(self, cat):
-    #     #Returns a list of scores to analyze externally
-    #     #Formatted as a string that Mathematica will interpret as a list
-    #     output = '{'
-    #     for id in self.table: output = output + str(self.table[id][cat]) + ', '
-    #     return output[:-2] + '}' #there's an extra terminal ', ' that we drop
+    def exportCalCentral(self, cat, filename):
+        #Writes a spreadsheet for uploading to CalCentral
+        #The format is Student ID number in column A and letter grade in column C
+        #cat is the label of the grade categoy containing final letter grades
+
+        with open(filename, 'w') as file:
+            outwriter = csv.writer(file, lineterminator = '\n')
+            for id in self.table:
+                outwriter.writerow([id, '', self.gradeTable[id][cat].getLetter() ])
+
+    def mathematicaList(self, cat):
+        #Returns a list of scores to analyze externally
+        #Formatted as a string that Mathematica will interpret as a list
+        output = '{'
+        for id in self.table: output = output + str(self.table[id][cat].getValue()) + ', '
+        return output[:-2] + '}' #there's an extra terminal ', ' that we drop
