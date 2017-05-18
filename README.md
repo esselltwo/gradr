@@ -11,6 +11,7 @@ Leaving off the "e" is trendy so I have complied.
 gradr.py defines a "Gradebook" object that stores student names and ids and a dictionary of scores/grades.
 It has a bunch of methods for importing names and scores, combining scores together, and exporting reports.
 It should be pretty clear if you look at the code.
+There is also an example in the folder Example: running script.py will generate a grade report.
 
 
 ## Formatting

@@ -1,4 +1,5 @@
-import gradr
+#This is a sample use of gradr that processes grades for the data in the .csv files
+import gradr #make sure gradr in in the same directory!
 
 
 sectionCutoffs = [-float('inf'), float('inf'), .35, .40, .43, .48, .58, .68, .74, .79, .86, .91, .98]
@@ -11,17 +12,23 @@ letterCutoffs = [-float('inf'), 6, 12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62]
 
 gbook = gradr.Gradebook()
 
+#Initialize and add section scores and grades
 gbook.importNames('names.csv')
 gbook.importScaledScores('quiz.csv')
 gbook.importScaledScores('homework.csv')
 gbook.foldCategories(['Homework', 'Quiz'], [.5,.5], 'Section')
 gbook.assignGrades('Section', sectionCutoffs)
+
+#Process exam scores and grades
+gradr.processGradescope('gradescope.csv', 'exam.csv', list(gbook.table.keys()))
 gbook.importScores('exam.csv')
 gbook.assignGrades('First Midterm', mid1Cutoffs)
 gbook.assignGrades('Second Midterm', mid2Cutoffs)
 gbook.assignGrades('Final Exam', examCutoffs)
 
-
+#In this class, students recieved a letter grade for homework/quizzes ('Section')
+#and for each exam. These were then summed together to give the final grade,
+#with the final couting twice. There were also rules for missing exams.
 sect = 'Section'
 mid1 = 'First Midterm'
 mid2 = 'Second Midterm'

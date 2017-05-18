@@ -1,5 +1,5 @@
 Name,SID,Email,First Midterm,First Midterm - Max Points,Second Midterm,Second Midterm - Max Points,Final Exam,Final Exam - Max Points
-Good Student, 1xxxx, good@example.com, 50.0, 55.0, 55.0, 60.0, 92.0, 100.0
-Average Student 2xxxx, avg@example.com, 37.0, 55.0, 40.0, 60.0, 53.0, 100.0
-Absent Student, 3xxxx, abs@example.com, 51.0,55.0,,60.0,63.0,100.0
-Missed Final, 4xxxx, not_there@example.com, 41.0,55.0,48.0,60.0,,100.0
+Good Student,100001,good@example.com,50.0,55.0,55.0,60.0,92.0,100.0
+Average Student,200001,avg@example.com,37.0,55.0,40.0,60.0,53.0,100.0
+Absent Student,300001,abs@example.com,51.0,55.0,,60.0,63.0,100.0
+Missed Final,400001,not_there@example.com,41.0,55.0,48.0,60.0,,100.0
