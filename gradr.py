@@ -199,6 +199,31 @@ class Gradebook:
                 average = sum(scaledScores)/float(len(scaledScores))
                 self.table[row[0]][category] = Score(average)
 
+    def importSummedScores(self, filename):
+        #Same as above, but don't normalize anything
+
+        with open(filename) as file:
+            scoreReader = csv.reader(file)
+
+            #extract header
+            firstRow = scoreReader.__next__()
+            category = firstRow[1] #second column has category name
+            # self.gradeCategories.append(category)
+
+            for row in scoreReader:
+                scores = [Score(x).getValue() for x in row[2:]]
+                scores.sort()
+                toDrop = int(row[1])
+                scores = scores[toDrop:]
+
+                out = 0.0
+                for x in scores:
+                    out += x
+
+                self.table[row[0]][category] = Score(out)
+
+
+
     def foldCategories(self, toFold, weights, newCat, delOld = False):
         #Folds list toFold of grade categories together
         #Folds according to weight vector weights
